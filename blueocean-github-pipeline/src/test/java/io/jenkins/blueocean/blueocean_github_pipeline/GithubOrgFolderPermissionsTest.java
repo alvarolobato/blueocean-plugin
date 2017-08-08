@@ -39,17 +39,17 @@ public class GithubOrgFolderPermissionsTest extends GithubMockBase {
         authz.grant(Jenkins.ADMINISTER).everywhere().to(user);
         j.jenkins.setAuthorizationStrategy(authz);
         // refresh the JWT token otherwise all hell breaks loose.
-        jwtToken = getJwtToken(j.jenkins, "vivek", "vivek");
+        jwtToken = getJwtToken(j.jenkins, "bob", "bob");
         createGithubOrgFolder(true);
     }
 
     @Test
-    public void canNotCreateWhenHaveNoPermissionOnDefaultOrg() throws Exception {        
+    public void canNotCreateWhenHaveNoPermissionOnDefaultOrg() throws Exception {
         MockAuthorizationStrategy authz = new MockAuthorizationStrategy();
         authz.grant(Item.READ).everywhere().to(user);
         j.jenkins.setAuthorizationStrategy(authz);
         // refresh the JWT token otherwise all hell breaks loose.
-        jwtToken = getJwtToken(j.jenkins, "vivek", "vivek");
+        jwtToken = getJwtToken(j.jenkins, "bob", "bob");
         createGithubOrgFolder(false);
     }
 
@@ -60,7 +60,7 @@ public class GithubOrgFolderPermissionsTest extends GithubMockBase {
         authz.grant(Item.CREATE, Item.CONFIGURE).onFolders(getOrgRoot()).to(user);
         j.jenkins.setAuthorizationStrategy(authz);
         // refresh the JWT token otherwise all hell breaks loose.
-        jwtToken = getJwtToken(j.jenkins, "vivek", "vivek");
+        jwtToken = getJwtToken(j.jenkins, "bob", "bob");
         createGithubOrgFolder(true);
     }
 
@@ -70,7 +70,7 @@ public class GithubOrgFolderPermissionsTest extends GithubMockBase {
         authz.grant(Item.READ).everywhere().to(user);
         j.jenkins.setAuthorizationStrategy(authz);
         // refresh the JWT token otherwise all hell breaks loose.
-        jwtToken = getJwtToken(j.jenkins, "vivek", "vivek");
+        jwtToken = getJwtToken(j.jenkins, "bob", "bob");
         createGithubOrgFolder(false);
     }
 
@@ -102,23 +102,12 @@ public class GithubOrgFolderPermissionsTest extends GithubMockBase {
         }
         else {
             assertEquals(403, resp.get("code"));
-            assertEquals("Failed to create pipeline: cloudbeers1. User vivek doesn't have Job create permission", resp.get("message"));
+            assertEquals("User bob doesn't have Job create permission", resp.get("message"));
             Assert.assertNull(item);
             String r = get("/organizations/"+ getOrgName() + "/pipelines/"+orgFolderName+"/", 404, String.class);
         }
     }
 
-    private String createGithubCredential(User user) throws UnirestException {
-        Map r = new RequestBuilder(baseUrl)
-                .data(ImmutableMap.of("accessToken", "12345"))
-                .status(200)
-                .jwtToken(getJwtToken(j.jenkins, user.getId(), user.getId()))
-                .put("/organizations/" + getOrgName() + "/scm/github/validate/")
-                .build(Map.class);
-
-        assertEquals("github", r.get("credentialId"));
-        return "github";
-    }
 
     private static String getOrgName() {
         return OrganizationFactory.getInstance().list().iterator().next().getName();
